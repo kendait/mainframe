@@ -30,12 +30,15 @@ mf_print() {
 	fi
 }
 
-clear
-mf_print -s "This is [mainframe]"
-mf_print -1 "Bash Version: "$BASH_VERSION
-mf_print -1 "Shell level: "$SHLVL
-mf_print -1 "PID: "$$
-mf_print -1 "calling command: "$0
-mf_print -e "columns: "$COLUMNS
-exit 0
+print_script_info() {
+	clear
+	mf_print -s "This is [mainframe]"
+	mf_print -1 "Bash Version: "$BASH_VERSION
+	mf_print -1 "Shell level: "$SHLVL
+	mf_print -1 "PID: "$$
+	mf_print -1 "calling command: "$0
+	mf_print -e "columns: "$COLUMNS
+}
 
+print_script_info
+exit 0
