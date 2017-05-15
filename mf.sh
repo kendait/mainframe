@@ -40,9 +40,23 @@ print_script_info() {
 	mf_print -e "columns: "$COLUMNS
 }
 
+list_mf_commands() {
+	mf_commands=($(find mf_commands/* -print0 -name "*.sh" | xargs -0 -I {} printf "{} " | sed 's/mf_commands\///g' | sed 's/[[:space:]]*$//'))
+	mf_print -1 "Available commands (${#mf_commands[@]}): "
+	counter=1
+	for i in "${mf_commands[@]}"; do
+		mf_print -1 "  ${counter}: ${i}"
+		counter=$(echo $(($counter+1)))
+	done
+}
+
 clear
 mf_print -b "This is [mainframe]"
-mf_print -s "Available commands: "
-ls -1 ./mf_commands | xargs -L 1 -I {} printf "\t  -{}\n"
+if [[ -z $(ls -m ./mf_commands) ]]; then
+	mf_print -b "no commands available"
+else
+	list_mf_commands
+fi
+
 echo
 exit 0
