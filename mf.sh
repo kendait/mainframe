@@ -40,5 +40,9 @@ print_script_info() {
 	mf_print -e "columns: "$COLUMNS
 }
 
-print_script_info
+clear
+mf_print -b "This is [mainframe]"
+mf_print -s "Available commands: "
+ls -1 ./mf_commands | xargs -L 1 -I {} printf "\t  -{}\n"
+echo
 exit 0
