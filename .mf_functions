@@ -55,11 +55,31 @@ list_mf_commands() {
 		mf_print -1 "Available commands (${#mf_commands[@]}): "
 		counter=1
 		for i in "${mf_commands[@]}"; do
-			mf_print -1 "  ${counter}: ${i}"
+			#mf_print -1 "  ${counter}: ${i}"
+			mf_print -1 "  ${counter}: $(echo $i | awk -F "\/" '{print $NF}')"
 			counter=$(echo $(($counter+1)))
 		done
 		unset counter
 	fi
+}
+
+
+
+prompt_for_command() {
+	echo -en "\n\t"
+	read -p "Choose a command (or \"q\" to exit): " chosen_command
+	if [[ $chosen_command == "q" ]]; then
+		mf_print -b "Exiting..."
+		exit 1
+	elif [ -z $chosen_command ]; then
+		mf_print -b "No command entered. Exiting..."
+		exit 1
+	fi
+	chosen_command=$(echo $(($chosen_command-1)))
+	chosen_command=${mf_commands[$chosen_command]}
+	chosen_command=$(echo $chosen_command | awk -F "\/" '{print $NF}')
+	echo "Chosen command: "$chosen_command
+	execute_chosen_command $chosen_command
 }
 
 execute_chosen_command() {
@@ -78,21 +98,6 @@ execute_chosen_command() {
 			exit 2
 		fi
 	fi
-}
-
-prompt_for_command() {
-	echo -en "\n\t"
-	read -p "Choose a command (or \"q\" to exit): " chosen_command
-	if [[ $chosen_command == "q" ]]; then
-		mf_print -b "Exiting..."
-		exit 1
-	elif [ -z $chosen_command ]; then
-		mf_print -b "No command entered. Exiting..."
-		exit 1
-	fi
-	chosen_command=$(echo $(($chosen_command-1)))
-	chosen_command=${mf_commands[$chosen_command]}
-	chosen_command=$(echo $chosen_command | awk -F "\/" '{print $NF}')
-	echo "Chosen command: "$chosen_command
-	execute_chosen_command $chosen_command
+	list_mf_commands
+	prompt_for_command
 }

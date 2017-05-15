@@ -27,6 +27,8 @@ list_mf_open_workspace() {
 			mf_print -1 "  ${counter}: ${i}"
 			counter=$(echo $(($counter+1)))
 		done
+		mf_print -1 "  ${counter}: << Back to main menu"
+		backOption=$counter
 		unset counter
 	fi
 }
@@ -55,6 +57,8 @@ prompt_for_workspace() {
 	if [[ $chosen_command == "q" ]]; then
 		mf_print -b "Exiting..."
 		exit 1
+	elif [[ $chosen_command == $backOption ]]; then
+		mf
 	elif [ -z $chosen_command ]; then
 		mf_print -b "No command entered. Exiting..."
 		exit 1
