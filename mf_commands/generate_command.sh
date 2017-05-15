@@ -4,7 +4,7 @@
 #	Author: Kenneth Dait
 #	Email: kendait@icloud.com
 
-source ./.mf_functions
+source $MAINFRAME_PATH/.mf_functions
 
 set_script_description() {
   mf_print -tee
@@ -34,7 +34,7 @@ set_unique_script_name() {
     mf_print -b "ERROR: file exists. Enter new name..."
     mf_print -tee && set_unique_script_name
   elif [[ $does_exist -eq 1 ]]; then
-    script_path=./mf_commands/$script_name
+    script_path=$MAINFRAME_PATH/mf_commands/$script_name
     return
   fi
 }
