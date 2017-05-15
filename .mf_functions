@@ -67,8 +67,8 @@ list_mf_commands() {
 
 prompt_for_command() {
 	echo -en "\n\t"
-	read -p "Choose a command (or \"q\" to exit): " chosen_command
-	if [[ $chosen_command == "q" ]]; then
+	read -p "Choose a command (or \"q|x\" to exit): " chosen_command
+	if [[ $chosen_command == "q" || $chosen_command == "x" ]]; then
 		mf_print -b "Exiting..."
 		exit 1
 	elif [ -z $chosen_command ]; then
@@ -83,7 +83,7 @@ prompt_for_command() {
 }
 
 execute_chosen_command() {
-	echo "execute: "$MAINFRAME_PATH"/mf_commands/"$@".sh"
+	#echo "execute: "$MAINFRAME_PATH"/mf_commands/"$@".sh"
 	if [ -x $MAINFRAME_PATH/mf_commands/$@.sh ]; then
 		clear && mf_print -b "Executing command: "$@
 		$MAINFRAME_PATH/mf_commands/$@.sh

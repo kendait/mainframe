@@ -4,27 +4,31 @@
 source $MAINFRAME_PATH/.mf_functions
 
 list_mf_open_workspace() {
-	if [[ -z $(ls -m $MAINFRAME_PATH/mf_modules) ]]; then
-		mf_print -b "no workspaces available"
-	else
-		#mf_commands=($(find $MAINFRAME_PATH/mf_modules/* -depth 1 -print0 -name "*.sh" | xargs -0 -I {} printf "{} " | sed 's/mf_modules\///g' | sed 's/[[:space:]]*$//'))
-    mf_commands=($(find $MAINFRAME_PATH/mf_modules/* -depth 1 -print0 -name "*.sh" | xargs -0 -I {} printf "{} " | sed 's/[[:space:]]*$//'))
-    counter=0
 
-		for i in "${mf_commands[@]}"; do
-			if [[ $(echo ${i:$(echo $((${#i}-3)))}) == ".sh" ]]; then
-				mf_commands[$counter]=$(echo $i | sed 's/.sh$//')
-			else
-				mf_commands[$counter]=$i
-			fi
-      mf_commands[$counter]=$(echo $i | sed 's/^[a-zA-Z_\/]*open_project_workspace\///g')
+	format_command_string() {
+		counter=0
+		#format mf_command string
+		for i in "${mf_workspaces[@]}"; do
+			i=$(echo ${mf_workspaces[$counter]} | sed 's/[[:space:]]*$//g')
+			#strip dirname and extension from string
+      mf_workspaces[$counter]=$(echo $i | sed 's/^[a-zA-Z_\/]*open_project_workspace\///g'| sed 's/\.sh[[:space:]]*$//g')
       counter=$(echo $(($counter+1)))
 		done
 		unset counter
-		mf_print -1 "Available commands (${#mf_commands[@]}): "
+	}
+
+	if [[ -z $(ls -m $MAINFRAME_PATH/mf_modules/open_project_workspace) ]]; then
+		mf_print -b "no workspaces available"
+		return
+	else
+		#collect available workspace options in array
+		mf_workspaces=($(find $MAINFRAME_PATH/mf_modules/open_project_workspace/* -depth 0 -print0 -name "*.sh" | xargs -0 -I {} printf "{} " | sed 's/[[:space:]]*$//'))
+		clear
+    mf_print -s "Available project workspaces (${#mf_workspaces[@]}): "
+		format_command_string
 		counter=1
-		for i in "${mf_commands[@]}"; do
-			mf_print -1 "  ${counter}: ${i}"
+		for i in "${mf_workspaces[@]}"; do
+			mf_print -1 "  ${counter}: $i"
 			counter=$(echo $(($counter+1)))
 		done
 		mf_print -1 "  ${counter}: << Back to main menu"
@@ -33,8 +37,27 @@ list_mf_open_workspace() {
 	fi
 }
 
+prompt_for_workspace() {
+	echo -en "\n\t"
+	read -p "Choose a workspace (or \"q\" to exit): " chosen_project_workspace
+	if [[ $chosen_project_workspace == "q" ]]; then
+		mf_print -b "Exiting..."
+		exit 0
+	elif [[ $chosen_project_workspace == $backOption ]]; then
+		return
+		exit 0
+	elif [ -z $chosen_project_workspace ]; then
+		mf_print -b "No command entered. Exiting..."
+		exit 1
+	fi
+	chosen_project_workspace=$(echo $(($chosen_project_workspace-1)))
+	chosen_project_workspace=${mf_workspaces[$chosen_project_workspace]}
+	chosen_project_workspace=$(echo $chosen_project_workspace | awk -F "\/" '{print $NF}')
+	echo "Chosen command: "$chosen_project_workspace
+}
+
 execute_chosen_command() {
-	echo "execute: "$MAINFRAME_PATH"/mf_modules/open_project_workspace/"$@".sh"
+	echo "execute: "$MAINFRAME_PATH/mf_modules/open_project_workspace/$@".sh"
 	if [ -x $MAINFRAME_PATH/mf_modules/open_project_workspace/$@.sh ]; then
 		clear && mf_print -b "Executing command: "$@
 		$MAINFRAME_PATH/mf_modules/open_project_workspace/$@.sh
@@ -51,24 +74,6 @@ execute_chosen_command() {
 	fi
 }
 
-prompt_for_workspace() {
-	echo -en "\n\t"
-	read -p "Choose a workspace (or \"q\" to exit): " chosen_command
-	if [[ $chosen_command == "q" ]]; then
-		mf_print -b "Exiting..."
-		exit 1
-	elif [[ $chosen_command == $backOption ]]; then
-		mf
-	elif [ -z $chosen_command ]; then
-		mf_print -b "No command entered. Exiting..."
-		exit 1
-	fi
-	chosen_command=$(echo $(($chosen_command-1)))
-	chosen_command=${mf_commands[$chosen_command]}
-	chosen_command=$(echo $chosen_command | awk -F "\/" '{print $NF}')
-	echo "Chosen command: "$chosen_command
-	execute_chosen_command $chosen_command
-}
-
 list_mf_open_workspace
 prompt_for_workspace
+execute_chosen_command $chosen_project_workspace
