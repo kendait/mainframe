@@ -41,22 +41,64 @@ print_script_info() {
 }
 
 list_mf_commands() {
-	mf_commands=($(find mf_commands/* -print0 -name "*.sh" | xargs -0 -I {} printf "{} " | sed 's/mf_commands\///g' | sed 's/[[:space:]]*$//'))
-	mf_print -1 "Available commands (${#mf_commands[@]}): "
-	counter=1
-	for i in "${mf_commands[@]}"; do
-		mf_print -1 "  ${counter}: ${i}"
-		counter=$(echo $(($counter+1)))
-	done
+	if [[ -z $(ls -m ./mf_commands) ]]; then
+		mf_print -b "no commands available"
+	else
+		mf_commands=($(find mf_commands/* -print0 -name "*.sh" | xargs -0 -I {} printf "{} " | sed 's/mf_commands\///g' | sed 's/[[:space:]]*$//'))
+		counter=0
+		for i in "${mf_commands[@]}"; do
+			if [[ $(echo ${i:$(echo $((${#i}-3)))}) == ".sh" ]]; then
+				mf_commands[$counter]=$(echo $i | sed 's/.sh$//')
+				counter=$(echo $(($counter+1)))
+			else
+				mf_commands[$counter]=$i
+				counter=$(echo $(($counter+1)))
+			fi
+		done
+		unset counter
+		mf_print -1 "Available commands (${#mf_commands[@]}): "
+		counter=1
+		for i in "${mf_commands[@]}"; do
+			mf_print -1 "  ${counter}: ${i}"
+			counter=$(echo $(($counter+1)))
+		done
+		unset counter
+	fi
+}
+
+execute_chosen_command() {
+	if [ -x ./mf_commands/$@.sh ]; then
+		clear && mf_print -b "Executing command: "$@
+		./mf_commands/$@.sh
+		mf_print -b "Done executing: "$@
+	else
+		if [ -x ./mf_commands/$@ ]; then
+			clear && mf_print -b "Executing command: "$@
+			./mf_commands/$@
+			mf_print -b "Done executing: "$@
+		else
+			mf_print -b "ERROR: command execution failed..."
+			exit 2
+		fi
+	fi
+}
+
+prompt_for_command() {
+	echo -en "\n\t"
+	read -p "Choose a command (or \"q\" to exit): " chosen_command
+	if [[ $chosen_command == "q" ]]; then
+		mf_print -b "Exiting..."
+		exit 1
+	fi
+	chosen_command=$(echo $(($chosen_command-1)))
+	chosen_command=${mf_commands[$chosen_command]}
+	execute_chosen_command $chosen_command
 }
 
 clear
 mf_print -b "This is [mainframe]"
-if [[ -z $(ls -m ./mf_commands) ]]; then
-	mf_print -b "no commands available"
-else
-	list_mf_commands
-fi
+list_mf_commands
+prompt_for_command
 
 echo
 exit 0
