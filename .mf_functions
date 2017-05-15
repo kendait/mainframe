@@ -18,6 +18,8 @@ mf_print() {
 			"-1") #single-line
 				shift
 				echo -en "\t"$@"\n";;
+			"-tee")
+				echo -en "\t";;
 		esac
 	else
 		echo $@
@@ -82,6 +84,9 @@ prompt_for_command() {
 	read -p "Choose a command (or \"q\" to exit): " chosen_command
 	if [[ $chosen_command == "q" ]]; then
 		mf_print -b "Exiting..."
+		exit 1
+	elif [ -z $chosen_command ]; then
+		mf_print -b "No command entered. Exiting..."
 		exit 1
 	fi
 	chosen_command=$(echo $(($chosen_command-1)))
