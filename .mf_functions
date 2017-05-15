@@ -37,10 +37,10 @@ print_script_info() {
 }
 
 list_mf_commands() {
-	if [[ -z $(ls -m ./mf_commands) ]]; then
+	if [[ -z $(ls -m $MAINFRAME_PATH/mf_commands) ]]; then
 		mf_print -b "no commands available"
 	else
-		mf_commands=($(find mf_commands/* -print0 -name "*.sh" | xargs -0 -I {} printf "{} " | sed 's/mf_commands\///g' | sed 's/[[:space:]]*$//'))
+		mf_commands=($(find $MAINFRAME_PATH/mf_commands/* -print0 -name "*.sh" | xargs -0 -I {} printf "{} " | sed 's/mf_commands\///g' | sed 's/[[:space:]]*$//'))
 		counter=0
 		for i in "${mf_commands[@]}"; do
 			if [[ $(echo ${i:$(echo $((${#i}-3)))}) == ".sh" ]]; then
@@ -63,14 +63,15 @@ list_mf_commands() {
 }
 
 execute_chosen_command() {
-	if [ -x ./mf_commands/$@.sh ]; then
+	echo "execute: "$MAINFRAME_PATH"/mf_commands/"$@".sh"
+	if [ -x $MAINFRAME_PATH/mf_commands/$@.sh ]; then
 		clear && mf_print -b "Executing command: "$@
-		./mf_commands/$@.sh
+		$MAINFRAME_PATH/mf_commands/$@.sh
 		mf_print -b "Done executing: "$@
 	else
-		if [ -x ./mf_commands/$@ ]; then
+		if [ -x $MAINFRAME_PATH/mf_commands/$@ ]; then
 			clear && mf_print -b "Executing command: "$@
-			./mf_commands/$@
+			$MAINFRAME_PATH/mf_commands/$@
 			mf_print -b "Done executing: "$@
 		else
 			mf_print -b "ERROR: command execution failed..."
@@ -91,5 +92,7 @@ prompt_for_command() {
 	fi
 	chosen_command=$(echo $(($chosen_command-1)))
 	chosen_command=${mf_commands[$chosen_command]}
+	chosen_command=$(echo $chosen_command | awk -F "\/" '{print $NF}')
+	echo "Chosen command: "$chosen_command
 	execute_chosen_command $chosen_command
 }

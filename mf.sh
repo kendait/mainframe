@@ -4,7 +4,7 @@
 #	author: Kenneth Dait
 #	email: kendait@icloud.com
 
-source ./.mf_functions
+source $MAINFRAME_PATH/.mf_functions
 
 clear
 mf_print -b "This is [mainframe]"
