@@ -67,7 +67,6 @@ caseArgs() {
 }
 
 trap 'trap "echo; echo Exiting...; exit 0" INT; echo -ne "\n\t"; echo "Press ^C once more to exit...";echo -ne "\n\t>> " && get_main_menu_selection && execute_selected_command' INT
-
 initialize_main_functions
 if [[ $# -eq 0 ]]; then
 	displayMainMenu
