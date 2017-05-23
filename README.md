@@ -1,3 +1,3 @@
 # MAINFRAME
 
-This is `mainframe`.
+This is `mainframe`, my personal bash scripting workflow.
