@@ -1,22 +1,33 @@
 #!/usr/local/bin/bash
 
+printFatalError() {
+  echo -en "\n\tMF: FATAL ERROR [${2}]\n\t>> " && \
+    echo -en "$1\n\t"
+    #echo -en ">> Exiting...[${2}]\n\n" && exit $2
+    echo -en ">> Exiting...[${2}]\n\n" && exit $2
+}
+
 initMainFunctions() {
 
 	setMFEnvVar() {
+    echo "settingEnvVars"
+
 		setMFPrefs() {
 			source $MF_PREFS/colors
 		}
 		if [ -z $MAINFRAME_PATH ]; then
-			echo "FATAL ERROR" && \
-				echo "Please set the \$MAINFRAME_PATH variable in ~/.bash_profile" && exit 200
+      errorString="Please set the \$MAINFRAME_PATH variable in ~/.bash_profile"
+			printFatalError "$errorString" 200
 		else
 			MF_HOME=$MAINFRAME_PATH
 			MF_PREFS=$MF_HOME/preferences
+      MF_MODULES=$MF_HOME/modules
+      export PS4
 			COLUMNS=$COLUMNS
 			setMFPrefs
 		fi
 	}
-	
+
 	mf_print() {
 
 		#--:BEGIN initMainFunctions():mf_print():printHeaderRow()
@@ -51,48 +62,66 @@ initMainFunctions() {
 			echo -en $headerRow"\n"
 		}
 
-		prependColorSeq() {
-			if [[ ${1:3:1} -gt 0 ]]; then
-				prependString=$2$highlightColor
-				if [[ ${formatSpecs:4:1} -eq 1 ]]; then
-					prependString=$prependString" "
-				fi
-			elif [ ! -z ${1:3:1} ]; then
-				prependString=$2$mainColor
-				if [[ ${1:4:1} -eq 1 ]]; then
-					prependString=$prependString" "
-					#appendString=" "
-				fi
-			fi
-			echo $prependString
-		}
+    char1_leadingSpace() {
+        case ${formatSpecs:0:1} in
+          0)
+            prependString="";;
+          1)
+            prependString="\n";;
+          2)
+            prependString="\n\n";;
+        esac
+    }
+
+    char2_leadingTab() {
+        case ${formatSpecs:1:1} in
+          0) prependString=$prependString;;
+          1) prependString=$prependString"\t";;
+          2) prependString=$prependString"\t  ";;
+        esac
+    }
+
+    char3_trailingSpace() {
+        case ${formatSpecs:2:1} in
+          0) appendString=$appendString;;
+          1) appendString=$appendString"\n";;
+          2) appendString=$appendString"\n\n";;
+        esac
+    }
+
+    char5_prependLeadingSpace() {
+      if [[ ${formatSpecs:4:1} -eq 1 ]]; then
+        prependString=$prependString" "
+      fi
+    }
+
+    char4_textFormatting() {
+      if [[ ${1:3:1} -gt 0 ]]; then
+        prependString=$2$highlightColor
+        char5_prependLeadingSpace
+      elif [ ! -z ${1:3:1} ]; then
+        prependString=$2$mainColor
+        char5_prependLeadingSpace
+      fi
+    }
+
+    prependColorSeq() {
+      char4_textFormatting
+      echo "$prependString"
+    }
 
 		#--:BEGIN initMainFunctions():mf_print():buildResultString()
 		buildResultString() {
 			prependString=""
 			appendString=""
-			case ${formatSpecs:0:1} in
-				0) 
-					prependString="";;
-				1) 
-					prependString="\n";;
-				2)	
-					prependString="\n\n";;
-			esac
-			case ${formatSpecs:1:1} in
-				0) prependString=$prependString;;
-				1) prependString=$prependString"\t";;
-			esac
+			char1_leadingSpace
+      char2_leadingTab
 			prependString=$(prependColorSeq $formatSpecs $prependString)
 			#if [[ ${formatSpecs:4:1} -eq 1 ]]; then
 			#	appendString=" "
 			#fi
 			appendString=$appendString$colorReset
-			case ${formatSpecs:2:1} in
-				0) appendString=$appendString;;
-				1) appendString=$appendString"\n";;
-				2) appendString=$appendString"\n\n";;
-			esac
+			char3_trailingSpace
 			resultString="${prependString}${inputString}${appendString}"
 		}
 
@@ -111,23 +140,47 @@ initMainFunctions() {
 			echo -en "$resultString"
 			return
 		fi
-	}
+  	}
 
 	#--:BEGIN initMainFunctions():displayMainMenuInputScreen()
 	displayMainMenuInputScreen() {
+
+    initializeSelectedCommandModule() {
+      command="$@"
+      mf_print r &&\
+        mf_print 111 "Selected command module: "$command
+    }
+
+    listModulesAndPromptForInput() {
+      moduleArr=($(ls -1 $MF_MODULES))
+      moduleIndex=0
+      for i in "${moduleArr[@]}"; do
+        echo -en "\t    "$(echo $((moduleIndex+1)))": $i\n" |\
+          sed 's/_/ /g'
+        ((moduleIndex+=1))
+      done
+      mf_print 100 && mf_print r
+      mf_print 111 "Select command module:"
+      mf_print 010 &&\
+        read -p "${PS4} " command
+      initializeSelectedCommandModule $command
+    }
+
 		clear
 		mf_print 1000
 		mf_print r
 		mf_print 1100 "THIS IS "
 		mf_print 0011 "[mainframe]"
-		mf_print 0110 "(display the main interactive menu here)"
+    mf_print 1210 "Available Command Modules:"
+    #mf_print 1210 "(display the main interactive menu here)"
+    listModulesAndPromptForInput
 		mf_print 1000
 		mf_print r
 		mf_print 0010
 	}
 
 	listMFComments() {
-		
+
 		#--:BEGIN initMainFunctions():listMFComments():listMFFunctions
 		listMFFunctions() {
 			cat $MF_HOME/mf.sh 2> /dev/null |\
@@ -181,7 +234,7 @@ initMainFunctions() {
 			case ${invocationArgs[0]} in
 				listMFComments)
 					listMFComments;;
-				testing) 
+				testing)
 					echo "THIS IS A TEST!"
 					echo $@
 					echo "NUMBER OF ARGS: "$#;;
@@ -195,7 +248,7 @@ initMainFunctions() {
 					done
 					echo $headerRow;;
 			esac
-		fi	
+		fi
 	}
 
 	##This function initializes the following functions:
@@ -209,16 +262,16 @@ initMainFunctions() {
 		#-setMFEnvVar()			<- sets [mainframe] environmental variables.
 		  #-setMFPrefs()			<- sets stored MF preferences
 
-	  #--:BEGIN initMainFunctions()
-	setMFEnvVar
-
 }
 
 #-:
 #-:## BEGIN MF.SH
 #-:
+
 #-:1. Initialize Main Functions
-initMainFunctions
+initMainFunctions 2> /dev/null \
+  && setMFEnvVar 2> /dev/null \
+  || printFatalError "Error initializing main functions." 300
 
 #-:2. Parse Arguments
 if [[ -z $@ ]]; then
