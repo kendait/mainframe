@@ -145,25 +145,70 @@ initMainFunctions() {
 	#--:BEGIN initMainFunctions():displayMainMenuInputScreen()
 	displayMainMenuInputScreen() {
 
-    initializeSelectedCommandModule() {
-      command="$@"
+    initializeSelectedCommand() {
+      selectedCommand="$@"
+      selectedCommand=$((selectedCommand-1))
+	      #echo "selectedCommand = "$selectedCommand && exit
+      #selectedCommand=${modCommandArr[$selectedCommand]}
+	      #echo $selectedCommand && exit
+      #modCommandArr=($(ls $selectedModule/$selectedCommand))
+      modCommandArr=($(ls $selectedModule))
+	      #echo ${modCommandArr[@]} && exit
+      selectedCommand=${modCommandArr[$selectedCommand]}
+	      #echo $selectedCommand && exit
+	      #echo $selectedCommand && exit
+      #echo ${modCommandArr[@]} && exit
+      #clear
+      #echo ${modCommandArr[@]} && exit
       mf_print r &&\
-        mf_print 111 "Selected command module: "$command
+        mf_print 112 "Executing command: "$selectedCommand
+      $selectedModule/$selectedCommand
+        #selectedCommand=${modCommandArr[$selectedCommand]}
+        #selectedCommand=$((selectedCommand-1)) &&\
+	return
+    }
+
+    listModuleContentsAndPromptForInput() {
+      selectedModule=$MF_MODULES/$(echo $1)
+      modCommandArr=($(ls $selectedModule))
+      modCommandIndex=0
+      #echo ${modCommandArr[@]} && exit
+      for i in "${modCommandArr[@]}"; do
+      ((modCommandIndex+=1))
+        echo -en "\t    $modCommandIndex: $i\n" |\
+          sed 's/_/ /g'
+      done
+      mf_print 100 && mf_print r
+      mf_print 111 "Select a command:"
+      mf_print 010 &&\
+	read -p "${PS4} " selectedCommand
+      return
+    }
+
+    initializeSelectedModule() {
+      commandMod="$@"
+      moduleArr=($(ls -1 $MF_MODULES))
+      mf_print r &&\
+      commandMod=$((commandMod-1))
+      commandMod=${moduleArr[$commandMod]}
+      mf_print 112 "Selected command module: "$commandMod
+      return
     }
 
     listModulesAndPromptForInput() {
       moduleArr=($(ls -1 $MF_MODULES))
       moduleIndex=0
       for i in "${moduleArr[@]}"; do
-        echo -en "\t    "$(echo $((moduleIndex+1)))": $i\n" |\
+
+      ((moduleIndex+=1))
+        echo -en "\t    $moduleIndex: $i\n" |\
           sed 's/_/ /g'
-        ((moduleIndex+=1))
       done
       mf_print 100 && mf_print r
       mf_print 111 "Select command module:"
       mf_print 010 &&\
-        read -p "${PS4} " command
-      initializeSelectedCommandModule $command
+        read -p "${PS4} " commandMod
+      return
     }
 
 		clear
@@ -173,10 +218,22 @@ initMainFunctions() {
 		mf_print 0011 "[mainframe]"
     mf_print 1210 "Available Command Modules:"
     #mf_print 1210 "(display the main interactive menu here)"
-    listModulesAndPromptForInput
+    #echo 111
+    listModulesAndPromptForInput && \
+	    #echo 222 &&\
+	    initializeSelectedModule $commandMod
+    #echo 333
+    listModuleContentsAndPromptForInput "$commandMod" &&\
+	    #echo 444 &&\
+            initializeSelectedCommand $selectedCommand
 		mf_print 1000
 		mf_print r
-		mf_print 0010
+		mf_print 0020
+	
+    #listModuleContentsAndPromptForInput "$commandMod"
+	    #initializeSelectedModule $commandMod &&\
+    #listModuleContentsAndPromptForInput "$commandMod"
+	    return
 	}
 
 	listMFComments() {
@@ -282,6 +339,7 @@ elif [[ $# -gt 0 ]]; then
 	#-:2b. Else, parse the invocation arguments.
 	#proceedCommand=$(parseInvocationArguments $@)
 fi
+echo "end of script"
 #-:
 #-:## END OF MF.SH
 #-:
