@@ -345,13 +345,13 @@ initMainFunctions() {
 
 #-:
 #-:## BEGIN MF.SH
-#-:
 
 #-:1. Initialize Main Functions
 initMainFunctions 2> /dev/null && setMFEnvVar 2> /dev/null \
   || printFatalError "Error initializing main functions." 300
 
 #-:2. Parse Arguments
+# say "This is, mainframe."
 if [[ -z $@ ]]; then
 	displayMainMenuInputScreen #-:2a. If no arguments, display main interactive menu.
 elif [[ $# -gt 0 ]]; then
@@ -360,4 +360,3 @@ fi
 
 #-:
 #-:## END OF MF.SH
-#-:
