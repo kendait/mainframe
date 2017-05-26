@@ -36,6 +36,7 @@ export main_mf_font_style colorWhiteOnBlack colorWhiteOnBlackBold colorBlackonWh
 
 
 
+
 printTheUsage() {
 	usageString="\t${main_mf_font_style} [mf] usage: ${colorReset}${colorBlackonWhiteBold} mf [-S | -s | -T | -O ] ${colorReset}"
 	echo -en "${usageString}\n\n\n"
@@ -87,11 +88,21 @@ printErrorMsg() {
 	return
 } 
 
+
+displayDiskUsedPercentage() {
+	usedDiskPercentage=$(df -H | grep "/dev/disk1" | awk '{print $5}')
+	echo -en "\tMac HD: ${usedDiskPercentage} full\n"
+}
+
 printTheWelcomeMsg() {
 	if [[ $1 == "c" || $1 == "clear" ]]; then clear; fi
 	leadingLines="\n\n\n"
-	trailingLines="\n\n"
-	printf "${leadingLines}\t${colorWhiteOnBlackBold}%s %s${colorReset}${trailingLines}" " This is" "[mainframe] "
+	currentdiskusage="$(displayDiskUsedPercentage)"
+	trailingLines="\n\n\n"
+	str1=" This is"
+	str2="[mainframe]"
+	printf "${leadingLines}\t${colorWhiteOnBlackBold}%s %s${colorReset}\n${currentdiskusage}${trailingLines}" "$(echo $str1)" "$(echo $str2)"
+
 }
 
 parsePassedArgsAndReturn() {
@@ -178,7 +189,7 @@ executeProceedCommand() {
 	#echo $scriptPath
 	#echo $executeType
 	#exit 0
-	[ -x $scriptPath ] && source $scriptPath \
+	[ -x $scriptPath ] && eval "$scriptPath $(echo ${invokedArgs[@]})" \
 		|| printErrorMsg 1 "\[ -x $scriptPath \]" "$scriptPath is not executable"
 	exitResult=$?
 
@@ -229,6 +240,7 @@ testExitStatus() {
 # 3. BEGIN SCRIPT
 #################################
 
+invokedArgs=$@
 printTheWelcomeMsg clear
 testExitStatus $? "printTheWelcomeMsg" "Error in initializing main screen."
 	#passing clear (or "c") will clear the terminal screen
@@ -245,6 +257,11 @@ else
 	exitResult=""
 	  #clear the value
 	proceedCommand=$(parsePassedArgsAndReturn $@)
+
+	#shift $1 out of invokedArgs
+	shift
+	invokedArgs=$@
+
 	if [[ $proceedCommand == "not_recognized" ]]; then
 		printErrorMsg 1 "proceedCommand" "The selected command was not recognized."
 		printTheUsage
@@ -258,4 +275,4 @@ fi
 executeProceedCommand $proceedCommand
 testExitStatus $? "executeProceedCommand \$proceedCommand" "Error with executing specified command."
 
-exit 0
+exit '00'

@@ -2,6 +2,7 @@
 
 
 # this is the servers.sh 
+
 httpdReport() {
 	httpdStatus=$(curl -sI http://localhost:80 | grep '^HTTP' | sed 's/[[:space:]]*$//')
 	if [[ $httpdStatus == 'HTTP/1.1 200 OK' ]]; then
@@ -102,9 +103,8 @@ toggleGeekToolServerGroup() {
 ######################
 
 if [[ $# -gt 0 ]]; then
-
+ 
 	case $1 in
-
 		start)
 			startApache
 			startMySQL
@@ -117,10 +117,15 @@ if [[ $# -gt 0 ]]; then
 			toggleGeekToolServerGroup false
 			;;
 
+		restart)
+			stopApache
+			stopMySQL
+			startApache
+			startMySQL
+			;;
 	esac
-
+	echo
 fi
-
 
 serverReport | awk 'BEGIN{IFS="\n"} {print "\t"$1"\t"$2"\t"$3}' | sed 's/:[[:space:]]*/: /g'
 echo -en "\n\n\n"
